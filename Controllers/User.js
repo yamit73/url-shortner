@@ -1,22 +1,35 @@
-import userSchema from "../Models/User";
-import Token from "../Components/User/Token";
-const { createToken, verifyToken } = Token;
-import Password from "../Components/User/Password";
+// import UserModel from "../Models/User.js";
+import Token from "../Components/User/Token.js";
+const { createToken } = Token;
+import Password from "../Components/User/Password.js";
 const { hasPassword, verifyPassword } = Password;
 
 const signup = async (req, res) => {
   const reqBody = req.body;
   const isValidParams = validateParams(reqBody);
-  console.log(isValidParams);
   if (!isValidParams.success) {
     return res.status(400).json(isValidParams);
   }
-  const hashedPassword = await hasPassword(reqBody.password);
-  const userCreateResponse = await userSchema.create({
-    email: reqBody.email,
-    password: hashedPassword
-  });
-  return userCreateResponse.status(200).json(userCreateResponse);
+  try {
+    const hashedPassword = await hasPassword(reqBody.password);
+    console.log({
+      email: reqBody.email,
+      password: hashedPassword,
+      created_at: Date.now().toString()
+    });
+    // const userCreateResponse = await UserModel.create(
+    //   {
+    //     email: reqBody.email,
+    //     password: hashedPassword,
+    //     created_at: Date.now().toString()
+    //   },
+    //   { wtimeout: 20000 }
+    // )
+    console.log(userCreateResponse);
+    return userCreateResponse.status(200).json(userCreateResponse);
+  } catch (err) {
+    return res.status(500).json({ success: false, errors: [err.message] });
+  }
 };
 
 const signin = async (req, res) => {
@@ -26,7 +39,7 @@ const signin = async (req, res) => {
   }
   let response = { success: false, errors: [] };
   try {
-    const user = await userSchema.findOne({ email: reqBody.email });
+    // const user = await UserModel.findOne({ email: reqBody.email });
     if (user) {
       const validCred = await verifyPassword(reqBody.password, user.password);
 
@@ -51,14 +64,16 @@ const signin = async (req, res) => {
 
 
 function validateParams(data) {
-  let response = { success: false, errors: [] };
+  let response = { success: true, errors: [] };
   if (!data || !data.email || !data.password) {
+    response.success = false;
     response.errors.push("email and passsword is required!");
     return response;
   }
 
   const isValidMail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email);
   if (!isValidMail) {
+    response.success = false;
     response.errors.push("Invalid email address!!");
   }
   let isLetter = false;
@@ -73,10 +88,8 @@ function validateParams(data) {
       isSpecChars = true;
     }
   }
-  console.log(isLetter, "isLetter");
-  console.log(isSpecChars, "isSpecChars");
-  console.log(isNumber, "isNumber");
   if (!isLetter || !isSpecChars || !isNumber) {
+    response.success = false;
     response.errors.push(
       "Password should be of combination of special character, number and letter"
     );

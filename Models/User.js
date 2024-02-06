@@ -1,23 +1,34 @@
-import mongoose, { mongo } from "mongoose";
+import mongoose from "mongoose";
 
-const userSchema = new mongoose.Schema({
-  user_id: {
-    type: String,
-    required: true,
+const userSchema = new mongoose.Schema(
+  {
+    user_id: {
+      type: String,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    password: {
+      type: String,
+      required: true,
+    }
   },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  password: {
-    type: String,
-    required: true,
-  },
-  created_at: {
-    type: Date,
-    default: Date.now,
-  },
+  {
+    timestamps: {
+      createdAt: 'created_at',
+      updatedAt: 'updated_at'
+    }
+  }
+);
+
+userSchema.pre('save', function (next) {
+  if (!this.user_id) {
+    this.user_id = this._id.toString();
+  }
+  next();
 });
 
-export default userSchema;
+const UserModel = mongoose.model('user_details', userSchema);
+export default UserModel;
