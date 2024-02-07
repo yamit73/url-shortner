@@ -1,15 +1,10 @@
 import jwt from "jsonwebtoken";
 import fs from "fs/promises";
-import crypto from "crypto";
 
 const createToken = async (payload) => {
   try {
     const privateKey = await loadPrivateKey();
-    const expiresIn = 4 * 60 * 60;
-    const token = jwt.sign(payload, privateKey.toString(), {
-      algorithm: "RS256",
-      expiresIn,
-    });
+    const token = jwt.sign(payload, privateKey.toString(), { expiresIn: '1h' });
 
     return token;
   } catch (error) {
@@ -19,8 +14,9 @@ const createToken = async (payload) => {
 
 const verifyToken = async (token) => {
   try {
-    const publicKey = await loadPublicKey();
-    const decoded = jwt.verify(token, publicKey, { algorithms: ["RS256"] });
+    // const publicKey = await loadPublicKey();
+    const privateKey = await loadPrivateKey();
+    const decoded = jwt.verify(token, privateKey.toString());
     return decoded;
   } catch (error) {
     throw error;

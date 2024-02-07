@@ -23,8 +23,12 @@ const signup = async (req, res) => {
       email: reqBody.email,
       password: hashedPassword,
     });
-    console.log(userCreateResponse);
-    return userCreateResponse.status(200).json(userCreateResponse);
+    if (userCreateResponse._id) {
+      const payload = { user_id: userCreateResponse.user_id };
+      const token = await createToken(payload);
+      console.log(token);
+      return res.status(200).json({ success: true, token });
+    }
   } catch (err) {
     return res.status(500).json({ success: false, errors: [err.message] });
   }
@@ -50,7 +54,7 @@ const signin = async (req, res) => {
         console.log(token);
         return res.status(200).json({ success: true, token });
       } else {
-        response.errors.push("Password didn't match!");
+        response.errors.push("Invalid credentials!");
         return res.status(401).json(response);
       }
     } else {

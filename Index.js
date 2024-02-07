@@ -18,7 +18,8 @@ connectToDB().then(() => {
 });
 
 app.use(userRouter);
-app.use(urlRouter, beforeHandleRequest);
+app.use(beforeHandleRequest);
+app.use(urlRouter);
 
 app.listen(PORT, () => {
     console.log("Server is listening on port: " + PORT);

@@ -4,6 +4,6 @@ const { generateNewShortUrl, redirectUrl } = UrlController;
 
 const router = Router();
 router.post('/url', generateNewShortUrl);
-router.get('/url', redirectUrl);
+router.get('/url/:id', redirectUrl);
 
 export default router;

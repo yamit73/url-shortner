@@ -4,12 +4,18 @@ import userSchema from "../Models/User.js";
 
 const beforeHandleRequest = async (req, res, next) => {
     try {
-        const token = req.headers.authorization ?? false;
+        const authorizationHeader = req.headers.authorization;
+        if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+            return res.status(401).send('Invalid Authorization header');
+        }
+        const token = authorizationHeader.substring(7);
         if (!token) {
             res.status(401).send("Token is missing from request!!");
         }
-        const decodedData = verifyToken(token);
-        console.log(decodedData)
+        const decodedData = await verifyToken(token);
+        if (decodedData.exp < Date.now) {
+            res.status(401).send("Token expired!!");
+        }
         const userId = decodedData.user_id;
         const user = await userSchema.findById(userId);
         req.user = user;

@@ -1,0 +1,31 @@
+version: '3'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: urlshortner
+    ports:
+      - "4400:4400"
+    depends_on:
+      - mongodb7
+    networks:
+      - app-network
+
+  # MongoDB
+  mongodb7:
+    image: mongo:latest
+    container_name: mongodb7
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: cedcommerce
+      MONGO_INITDB_DATABASE: admin
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

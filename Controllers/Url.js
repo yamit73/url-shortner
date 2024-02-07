@@ -7,35 +7,41 @@ const generateNewShortUrl = async (req, res) => {
     if (!reqData.url) {
         return res.status(400).json({ success: false, message: "url is required!!!" });
     }
-    const shortId = nanoid(8);
-    await URL.create({
-        shortId: shortId,
-        redirectUrl: reqData.url,
-        visitHistory: []
-    });
-
-    return res.status(200).json({ success: true, data: { id: shortId } });
+    const userId = req.user.user_id;
+    const url = reqData.url;
+    const dbData = await URL.findOne({ user_id: userId, redirect_url: url });
+    if (!dbData) {
+        const shortId = nanoid(20);
+        await URL.create({
+            user_id: userId,
+            short_id: shortId,
+            redirect_url: url,
+            visit_count: 0
+        });
+        return res.json({ success: true, data: { id: shortId } });
+    } else {
+        return res.json({ success: false, errors: ["short url already exists for the same url!!"] });
+    }
 }
 
 const redirectUrl = async (req, res) => {
-    const {id} = req.query;
-    console.log(id);
+    const { id } = req.params;
     if (!id) {
         return res.status(400).json({ success: false, message: "id is required!!!" });
     }
+    const userId = req.user.user_id;
     let dbData = await URL.findOneAndUpdate(
         {
-            shortId: id,
+            user_id: userId,
+            short_id: id,
         },
         {
-            $push: {
-                visitHistory: {
-                    timeStamps: new Date()
-                }
-            }
+            $inc: { visit_count: 1 }
         }
     );
-
-    return res.redirect(dbData.redirectUrl);
+    if (dbData) {
+        return res.redirect(dbData.redirect_url);
+    }
+    return res.json({ success: false, errors: ["Invalid url for"] });
 }
 export default { generateNewShortUrl, redirectUrl };
