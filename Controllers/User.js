@@ -1,4 +1,4 @@
-// import UserModel from "../Models/User.js";
+import UserModel from "../Models/User.js";
 import Token from "../Components/User/Token.js";
 const { createToken } = Token;
 import Password from "../Components/User/Password.js";
@@ -12,19 +12,17 @@ const signup = async (req, res) => {
   }
   try {
     const hashedPassword = await hasPassword(reqBody.password);
-    console.log({
+    const dbUser = await UserModel.findOne({ email: reqBody.email });
+    if (dbUser) {
+      return res.status(400).json({
+        success: false,
+        errors: ["user with same email already exist"],
+      });
+    }
+    const userCreateResponse = await UserModel.create({
       email: reqBody.email,
       password: hashedPassword,
-      created_at: Date.now().toString()
     });
-    // const userCreateResponse = await UserModel.create(
-    //   {
-    //     email: reqBody.email,
-    //     password: hashedPassword,
-    //     created_at: Date.now().toString()
-    //   },
-    //   { wtimeout: 20000 }
-    // )
     console.log(userCreateResponse);
     return userCreateResponse.status(200).json(userCreateResponse);
   } catch (err) {
@@ -35,18 +33,21 @@ const signup = async (req, res) => {
 const signin = async (req, res) => {
   const reqBody = req.body;
   if (!reqBody || !reqBody.email || !reqBody.password) {
-    return res.status(400).json({ success: false, errors: ["email and password are required"] });
+    return res
+      .status(400)
+      .json({ success: false, errors: ["email and password are required"] });
   }
   let response = { success: false, errors: [] };
   try {
-    // const user = await UserModel.findOne({ email: reqBody.email });
+    const user = await UserModel.findOne({ email: reqBody.email });
+    console.log(user);
     if (user) {
       const validCred = await verifyPassword(reqBody.password, user.password);
-
+      console.log(validCred);
       if (validCred) {
         const payload = { user_id: user.user_id };
         const token = await createToken(payload);
-
+        console.log(token);
         return res.status(200).json({ success: true, token });
       } else {
         response.errors.push("Password didn't match!");
@@ -58,10 +59,11 @@ const signin = async (req, res) => {
     }
   } catch (error) {
     console.error("Error in signin:", error);
-    return res.status(500).json({ success: false, errors: ["Internal server error"] });
+    return res
+      .status(500)
+      .json({ success: false, errors: ["Internal server error"] });
   }
 };
-
 
 function validateParams(data) {
   let response = { success: true, errors: [] };
