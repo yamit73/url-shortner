@@ -6,24 +6,24 @@ const beforeHandleRequest = async (req, res, next) => {
     try {
         const authorizationHeader = req.headers.authorization;
         if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
-            return res.status(401).send('Invalid Authorization header');
+            return res.status(401).send({ success: false, errors: ['Invalid Authorization header'] });
         }
-        const token = authorizationHeader.substring(7);
+        const token = authorizationHeader.substring(7) ?? req.query.bearer;
         if (!token) {
-            res.status(401).send("Token is missing from request!!");
+            res.status(401).send({ success: false, errors: ["Token is missing from request!!"] });
         }
-        const decodedData = await verifyToken(token);
-        if (decodedData.exp < Date.now) {
-            res.status(401).send("Token expired!!");
+        try {
+            const decodedData = await verifyToken(token);
+            const userId = decodedData.user_id;
+            const user = await userSchema.findById(userId);
+            req.user = user;
+            next();
+        } catch (err) {
+            res.status(500).send({ success: false, errors: [err.message] })
         }
-        const userId = decodedData.user_id;
-        const user = await userSchema.findById(userId);
-        req.user = user;
-        next();
-    } catch (error) {
-        console.error(error);
-        res.status(500).send("Something went wrong!!");
-    }
-};
 
+    } catch (error) {
+        res.status(500).send({ success: false, errors: ["Something went wrong!!"] });
+    };
+}
 export default beforeHandleRequest;

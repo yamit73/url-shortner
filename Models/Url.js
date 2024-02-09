@@ -7,7 +7,6 @@ const urlSchema = new mongoose.Schema(
         },
         short_id: {
             type: String,
-            required: true,
             unique: true
         },
         redirect_url: {
@@ -26,6 +25,15 @@ const urlSchema = new mongoose.Schema(
     }
 );
 
+urlSchema.pre("save", function (next) {
+    if (!this.short_id) {
+        this.short_id = this._id.toString();
+    }
+    if (!this.visit_count) {
+        this.visit_count = 0;
+    }
+    next();
+})
 const URL = mongoose.model('url', urlSchema);
 
 export default URL;

@@ -1,4 +1,3 @@
-import { nanoid } from "nanoid";
 import URL from "../Models/Url.js";
 
 
@@ -10,15 +9,13 @@ const generateNewShortUrl = async (req, res) => {
     const userId = req.user.user_id;
     const url = reqData.url;
     const dbData = await URL.findOne({ user_id: userId, redirect_url: url });
+    console.log(dbData);
     if (!dbData) {
-        const shortId = nanoid(20);
-        await URL.create({
+        const urlCreateRespone = await URL.create({
             user_id: userId,
-            short_id: shortId,
-            redirect_url: url,
-            visit_count: 0
+            redirect_url: url
         });
-        return res.json({ success: true, data: { id: shortId } });
+        return res.json({ success: true, data: { id: urlCreateRespone.short_id } });
     } else {
         return res.json({ success: false, errors: ["short url already exists for the same url!!"] });
     }
@@ -29,10 +26,8 @@ const redirectUrl = async (req, res) => {
     if (!id) {
         return res.status(400).json({ success: false, message: "id is required!!!" });
     }
-    const userId = req.user.user_id;
     let dbData = await URL.findOneAndUpdate(
         {
-            user_id: userId,
             short_id: id,
         },
         {

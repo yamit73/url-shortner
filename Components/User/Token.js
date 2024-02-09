@@ -16,7 +16,12 @@ const verifyToken = async (token) => {
   try {
     // const publicKey = await loadPublicKey();
     const privateKey = await loadPrivateKey();
-    const decoded = jwt.verify(token, privateKey.toString());
+    const decoded = jwt.verify(token, privateKey.toString(), (error, decoded) => {
+      if (error) {
+        throw error;
+      }
+      return decoded;
+    });
     return decoded;
   } catch (error) {
     throw error;
